@@ -1,6 +1,6 @@
 import React from "react";
 
-function User ({user}) {
+function ErrorUser ({user}) {
     // if(!user){
     //     return null
     // }
@@ -17,4 +17,4 @@ function User ({user}) {
     );
 }
 
-export default User;
+export default ErrorUser;
