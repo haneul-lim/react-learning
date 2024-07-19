@@ -1,133 +1,38 @@
-import React, { createContext, useReducer, useContext } from "react";
-import axios from "axios";
+import React, { useState } from "react";
+import { useUsersState, useUsersDispatch, getUsers } from "./UsersApiContext";
+import  User from './User';
 
-// UsersContext에서 사용 할 기본 상태
-const initialState = {
-    users: {
-        loading: false,
-        data: null,
-        error: null
-    },
-    user: {
-        loading: false,
-        data: null,
-        error: null
-    }
-};
+function UsersContext()  {
+    const [userId, setUserId] = useState(null);
+    const state = useUsersState();
+    const dispatch = useUsersDispatch();
 
-// 로딩중일 때 바뀔 상태 객체
-const loadingState = {
-    loading: true,
-    data: null,
-    error: null
-};
+    const {data: users, loading, error} = state.users;
+    const fetchData = () => {
+        getUsers(dispatch);
+    };
 
-// 성공했을 때의 상태 만들어주는 함수
-const success = data => ({
-    loading: false,
-    data,
-    error: null
-});
+    if(loading) return <div>로딩중...</div>;
+    if(error) return <div>에러가 발생했습니다</div>;
+    if(!users) return <button onClick={fetchData}>불러오기</button>;
 
-// 실패했을 때의 상태 만들어주는 함수
-const error = error => ({
-    loading: false,
-    data: null,
-    error: error
-});
-
-// 위에서 만든 객체 / 유틸 함수들을 사용하여 리듀서 작성
-function usersReducer(state, action) {
-    switch(action.type) {
-        case 'GET_USERS':
-            return {
-                ...state,
-                users: loadingState
-            };
-        case 'GET_USERS_SUCCESS':
-            return {
-                ...state,
-                users: success(action.data)
-            };
-        case 'GET_USERS_ERROR':
-            return {
-                ...state,
-                users: error(action.error)
-            };
-        case 'GET_USER':
-            return {
-                ...state,
-                user: loadingState
-            };
-        case 'GET_USER_SUCCESS':
-            return {
-                ...state,
-                user: success(action.data)
-            };
-        case 'GET_USER_ERROR':
-            return {
-                ...state,
-                user: error(action.error)
-            };
-        default:
-            throw new Error(`Unhanded action type: ${action.type}`);
-    }
-}
-
-// State용 Context와 Dispatch용 Context 따로 만들어주기
-const UsersStateContext = createContext(null);
-const USersDispatchContext = createContext(null);
-
-// 위에서 선언한 두가지 Context들의 Provider로 감싸주는 컴포넌트
-export function UsersProvider({children}) {
-    const [state, dispatch] = useReducer(usersReducer, initialState);
     return (
-        <UsersStateContext.Provider value={state}>
-            <USersDispatchContext.Provider value={dispatch}>
-                {children}
-            </USersDispatchContext.Provider>
-        </UsersStateContext.Provider>
+        <>
+            <ul>
+                {users.map(user => (
+                    <li
+                        key={user.id}
+                        onClick={() => setUserId(user.id)}
+                        style={{cursor: 'pointer'}}
+                    >
+                        {user.username} ({user.name})
+                    </li>
+                ))}
+            </ul>
+            <button onClick={fetchData}>다시 불러오기</button>
+            {userId && <User id={userId} />}
+        </>
     );
 }
 
-// State를 쉽게 조회 할 수 있게 해주는 커스텀 Hook
-export function useUsersState() {
-    const state = useContext(UsersStateContext);
-    if(!state) {
-        throw  new Error('Cannot find UsersProvider');
-    }
-    return state;
-}
-
-// Dispatch를 쉽게 사용 할 수 있게 해주는 커스텀 Hook
-export function useUsersDispatch() {
-    const dispatch = useContext(USersDispatchContext);
-    if(dispatch) {
-        throw new Error('Cannot find UsersProvider');
-    }
-    return dispatch;
-}
-
-export async function getUsers(dispatch) {
-    dispatch({type: 'GET_USERS'});
-    try{
-        const response = await axios.get(
-            'https://jsonplaceholder.typicode.com/users'
-        );
-        dispatch({type: 'GET_USERS_SUCCESS', data: response.data});
-    }catch(e) {
-        dispatch({type: 'GET_USERS_ERROR', error: e});
-    }
-}
-
-export async function getUser(dispatch, id) {
-    dispatch({type: 'GET_USER'});
-    try{
-        const response = await axios.get(
-            `https://jsonplaceholder.typicode.com/users/${id}`
-        );
-        dispatch({type: 'GET_USER_SUCCESS', data: response.data});
-    }catch(e) {
-        dispatch({type: 'GET_USER_ERROR', error: e});
-    }
-}
+export default UsersContext;

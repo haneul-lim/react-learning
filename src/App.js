@@ -2,7 +2,8 @@ import React from "react";
 import ErrorUser from "./01_basic/ErrorUser";
 import ErrorBoundary from "./01_basic/ErrorBoundary";
 import UsersUseAsync from "./04_api/UsersUseAsync";
-import { UsersProvider } from "./04_api/UsersContext";
+import { UsersProvider } from "./04_api/UsersApiContext";
+import UsersContext from './04_api/UsersContext';
 
 function App() {
   // const user = {
@@ -15,7 +16,7 @@ function App() {
       //   <ErrorUser />
       // </ErrorBoundary>
       <UsersProvider>
-        <UsersUseAsync />
+        <UsersContext />
       </UsersProvider>
   );
 }
